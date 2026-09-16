@@ -36,31 +36,39 @@ jobs:
       - name: Train on all available history and generate signal
         run: python scripts/generate_signal.py
 
-      - name: Validate signal files
+      - name: Run chronological OOS validation
+        run: python scripts/oos_validation.py
+
+      - name: Validate signal and OOS files
         run: |
           test -f signals/latest_trade_call.json
           test -f signals/latest_trade_call.md
           test -f data/research/selected_parameters.json
+          test -f data/research/oos_validation.json
+          test -f data/research/oos_trade_history.csv
           python - <<'PY'
           import json
           p=json.load(open('signals/latest_trade_call.json'))
           assert p.get('status') in {'PENDING_ENTRY','NO_SIGNAL'}
+          o=json.load(open('data/research/oos_validation.json'))
+          assert o.get('method') == 'Chronological 70/30 holdout'
+          assert o.get('oos',{}).get('trades',0) > 0
           print('Signal status:', p.get('status'))
+          print('OOS trades:', o['oos']['trades'])
+          print('OOS win rate:', o['oos']['win_rate'])
+          print('OOS return:', o['oos']['total_return'])
           if p.get('status') == 'PENDING_ENTRY':
               required=['planned_entry_date','expiry','lot_size','suggested_paper_lots','reference_credit_points','max_expiry_loss_total']
               missing=[x for x in required if x not in p]
               assert not missing, missing
-              print('Planned entry:', p['planned_entry_date'])
-              print('Expiry:', p['expiry'])
-              print('Lots:', p['suggested_paper_lots'])
           PY
 
-      - name: Commit paper signal artifacts
+      - name: Commit paper signal and validation artifacts
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add signals data/research
-          git diff --cached --quiet || git commit -m "Update prospective iron condor paper signal"
+          git diff --cached --quiet || git commit -m "Update prospective iron condor signal and OOS validation"
           git push
 
       - name: Upload artifacts
@@ -70,8 +78,10 @@ jobs:
           path: |
             signals/latest_trade_call.md
             signals/latest_trade_call.json
-            signals/open_trade.json
             data/research/selected_parameters.json
             data/research/parameter_leaderboard.csv
+            data/research/oos_validation.json
+            data/research/oos_train_parameter_leaderboard.csv
+            data/research/oos_trade_history.csv
             data/cache/manifest.json
           if-no-files-found: ignore
