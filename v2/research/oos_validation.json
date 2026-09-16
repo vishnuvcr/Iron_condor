@@ -1,0 +1,48 @@
+{
+  "method": "Chronological 70/30 holdout",
+  "selection_rule": "512-configuration grid selected on training period only using the production research score",
+  "production_training_note": "The live signal is trained on all available data separately; these OOS figures are a historical validation snapshot and are not the live model's in-sample result.",
+  "dataset_start": "2015-01-01",
+  "dataset_end": "2026-09-16",
+  "train_start": "2015-01-01",
+  "train_end": "2023-03-08",
+  "oos_start": "2023-03-09",
+  "oos_end": "2026-09-16",
+  "train_sessions": 2022,
+  "oos_sessions": 867,
+  "selected_parameters": {
+    "distance": 0.0125,
+    "width": 250,
+    "take_profit": 0.4,
+    "stop_loss": 1.0
+  },
+  "train": {
+    "trades": 248,
+    "win_rate": 1.0,
+    "total_return": 8.01751509998175,
+    "net_pnl": 801751.5099981751,
+    "median_trade": 1962.4233088000005,
+    "worst_trade": 10.183363449999959,
+    "best_trade": 30558.090461499996,
+    "profit_factor": Infinity,
+    "take_profit_trades": 248,
+    "stop_loss_trades": 0,
+    "expiry_trades": 0
+  },
+  "oos": {
+    "trades": 175,
+    "win_rate": 1.0,
+    "total_return": 6.9121184267928,
+    "net_pnl": 691211.84267928,
+    "median_trade": 2627.054268925,
+    "worst_trade": 46.54813932500004,
+    "best_trade": 23173.691511404995,
+    "profit_factor": Infinity,
+    "take_profit_trades": 175,
+    "stop_loss_trades": 0,
+    "expiry_trades": 0
+  },
+  "oos_trades_file": "data/research/oos_trade_history.csv",
+  "oos_detailed_trades_file": "data/research/oos_trade_history_detailed.csv",
+  "oos_detailed_trades_json": "data/research/oos_trade_history_detailed.json"
+}
