@@ -8,6 +8,7 @@ on:
     workflows:
       - NIFTY Iron Condor V1 Paper Signal
       - NIFTY Iron Condor V2 Paper Signal
+      - NIFTY Iron Condor V2 OOS Validation
     types: [completed]
 
 permissions:
