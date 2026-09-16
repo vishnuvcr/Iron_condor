@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   signal:
-    if: github.actor != 'github-actions[bot]'
+    if: github.actor != 'github-actions[bot]' && (github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'Fix Pages dashboard'))
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
