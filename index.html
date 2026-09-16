@@ -15,8 +15,6 @@ h1{margin:0 0 4px;font-size:clamp(1.5rem,4vw,2.2rem)}
 .label{font-size:.82rem;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
 .good{color:#15803d;font-weight:700}.warn{color:#b45309;font-weight:700}.muted{color:#64748b}
 .legs{width:100%;border-collapse:collapse}.legs th,.legs td{padding:9px;border-bottom:1px solid #e2e8f0;text-align:left}
-pre{white-space:pre-wrap;word-break:break-word;background:#0f172a;color:#e2e8f0;border-radius:10px;padding:12px;overflow:auto}
-a{color:#2563eb}
 @media(max-width:600px){body{padding:16px}.card{padding:13px}}
 </style>
 </head>
@@ -31,9 +29,10 @@ async function get(path){const r=await fetch(path+bust,{cache:'no-store'});if(!r
 function money(x){return Number(x).toLocaleString('en-IN',{maximumFractionDigits:2});}
 function num(x,d=2){return Number(x).toFixed(d);}
 async function load(){
-  const [signal,params]=await Promise.all([
+  const [signal,params,oos]=await Promise.all([
     get('signals/latest_trade_call.json'),
-    get('data/research/selected_parameters.json')
+    get('data/research/selected_parameters.json'),
+    get('data/research/oos_validation.json')
   ]);
   document.getElementById('status').innerHTML=`<div class="label">Current status</div><div class="big">${signal.status}</div><div class="muted">Latest data: ${signal.latest_data_date||'—'}</div>`;
   const app=document.getElementById('app');
@@ -43,12 +42,13 @@ async function load(){
     <div class="card"><div class="label">Take profit</div><div class="big">${num(params.take_profit*100,0)}% credit</div></div>
     <div class="card"><div class="label">Stop loss</div><div class="big">${num(params.stop_loss,2)}× credit</div></div>
   </div>`;
-  html+=`<div class="card" style="margin-top:12px"><div class="label">Full-history training snapshot</div><p>Trades: <b>${money(params.trades)}</b> · In-sample win rate: <b>${num(params.win_rate*100,2)}%</b> · In-sample cumulative return: <b>${num(params.total_return*100,2)}%</b></p><p class="muted">These are training-period statistics, not out-of-sample performance.</p></div>`;
+  html+=`<div class="card" style="margin-top:12px"><div class="label">Historical OOS validation — 70/30 chronological holdout</div><p><b>Train:</b> ${oos.train_start} → ${oos.train_end} · <b>OOS:</b> ${oos.oos_start} → ${oos.oos_end}</p><div class="grid"><div><div class="label">OOS trades</div><div class="big">${oos.oos.trades}</div></div><div><div class="label">OOS win rate</div><div class="big">${num(oos.oos.win_rate*100,2)}%</div></div><div><div class="label">OOS cumulative return</div><div class="big">${num(oos.oos.total_return*100,2)}%</div></div><div><div class="label">OOS worst trade</div><div class="big">₹${money(oos.oos.worst_trade)}</div></div></div><p class="muted">Parameters for this OOS test were selected using training data only. This is separate from the production model, which is retrained on all available history for prospective signals.</p></div>`;
+  html+=`<div class="card" style="margin-top:12px"><div class="label">Full-history production training snapshot</div><p>Trades: <b>${money(params.trades)}</b> · In-sample win rate: <b>${num(params.win_rate*100,2)}%</b> · In-sample cumulative return: <b>${num(params.total_return*100,2)}%</b></p><p class="muted">This is a training-period statistic, not OOS performance.</p></div>`;
   if(signal.status==='PENDING_ENTRY'){
     let rows='';for(const [k,v] of Object.entries(signal.legs||{})){rows+=`<tr><td>${k}</td><td>${v.strike} ${v.type}</td><td>${num(v.reference_eod_premium)}</td></tr>`;}
     html+=`<div class="card" style="margin-top:12px"><h2>Current trade call</h2><p><b>Signal:</b> ${signal.signal_date} · <b>Entry:</b> ${signal.planned_entry_date} · <b>Expiry:</b> ${signal.expiry}</p><div class="grid"><div><div class="label">NIFTY reference</div><div class="big">${num(signal.nifty_reference)}</div></div><div><div class="label">Net credit</div><div class="big">${num(signal.reference_credit_points)} pts</div></div><div><div class="label">Lot / lots</div><div class="big">${signal.lot_size} / ${signal.suggested_paper_lots}</div></div><div><div class="label">Max expiry loss</div><div class="big">₹${money(signal.max_expiry_loss_total)}</div></div></div><h3>Four-leg spread</h3><table class="legs"><thead><tr><th>Leg</th><th>Strike</th><th>Reference premium</th></tr></thead><tbody>${rows}</tbody></table><p><b>Breakevens:</b> ${num(signal.breakeven_lower)} / ${num(signal.breakeven_upper)}</p><p><b>Target debit:</b> ${num(signal.take_profit_debit)} · <b>Stop debit:</b> ${num(signal.stop_loss_debit)}</p><p><b>Target P&amp;L:</b> ₹${money(signal.target_pnl_total_reference)} · <b>Stop P&amp;L:</b> ₹${money(signal.stop_pnl_total_reference)}</p></div>`;
   }else{
-    html+=`<div class="card" style="margin-top:12px"><div class="big">No new trade call</div><p>${signal.reason||'No current signal.'}</p><p class="muted">The current strategy generates signals on its configured entry day. The dashboard still shows the latest full-history model snapshot.</p></div>`;
+    html+=`<div class="card" style="margin-top:12px"><div class="big">No new trade call</div><p>${signal.reason||'No current signal.'}</p><p class="muted">The current strategy generates signals on its configured entry day. The dashboard still shows the live model snapshot and the latest historical OOS validation.</p></div>`;
   }
   html+=`<div class="card" style="margin-top:12px"><b>Paper-trading rule:</b> EOD option prices are reference values only. Record actual observed bid/ask entry, timestamp, quantity, charges, and exit details separately.</div>`;
   app.innerHTML=html;
