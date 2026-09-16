@@ -1,6 +1,8 @@
 name: NIFTY Iron Condor Paper Signal
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
   schedule:
     - cron: '30 11 * * 2'   # Tuesday 17:00 IST, after NSE close
