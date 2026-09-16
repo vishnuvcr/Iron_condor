@@ -1,7 +1,58 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NIFTY Iron Condor Paper Signal</title><style>body{font-family:system-ui,sans-serif;max-width:950px;margin:32px auto;padding:0 16px;line-height:1.5}h1{margin-bottom:4px}.muted{color:#666}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.card{border:1px solid #ddd;border-radius:12px;padding:16px}.big{font-size:1.45rem;font-weight:700}.ok{font-weight:700}.legs{width:100%;border-collapse:collapse}.legs th,.legs td{border-bottom:1px solid #eee;padding:8px;text-align:left}@media(max-width:600px){body{margin:16px auto}}</style></head>
-<body><h1>NIFTY Iron Condor Paper Signal</h1><div id="status" class="muted">Loading latest signal…</div><div id="app"></div>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NIFTY Iron Condor — Paper Trading Dashboard</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#111827;background:#f8fafc}
+body{max-width:1000px;margin:0 auto;padding:24px 16px;line-height:1.5}
+h1{margin:0 0 4px;font-size:clamp(1.5rem,4vw,2.2rem)}
+.sub{color:#64748b;margin-bottom:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.card{background:white;border:1px solid #e2e8f0;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(15,23,42,.04)}
+.big{font-size:1.45rem;font-weight:750}
+.label{font-size:.82rem;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
+.good{color:#15803d;font-weight:700}.warn{color:#b45309;font-weight:700}.muted{color:#64748b}
+.legs{width:100%;border-collapse:collapse}.legs th,.legs td{padding:9px;border-bottom:1px solid #e2e8f0;text-align:left}
+pre{white-space:pre-wrap;word-break:break-word;background:#0f172a;color:#e2e8f0;border-radius:10px;padding:12px;overflow:auto}
+a{color:#2563eb}
+@media(max-width:600px){body{padding:16px}.card{padding:13px}}
+</style>
+</head>
+<body>
+<h1>NIFTY Iron Condor Paper Trading Dashboard</h1>
+<div class="sub">Prospective research signal • EOD reference prices • paper trading only</div>
+<div id="status" class="card muted">Loading…</div>
+<div id="app"></div>
 <script>
-async function load(){const r=await fetch('signals/latest_trade_call.json?ts='+Date.now());const p=await r.json();const s=document.getElementById('status');s.textContent='Status: '+p.status+(p.generated_utc?' | generated '+p.generated_utc:'');const a=document.getElementById('app');if(p.status!=='PENDING_ENTRY'){a.innerHTML='<div class="card"><div class="big">NO SIGNAL</div><p>'+((p.reason)||'No current signal.')+'</p></div>';return;}let legs='';for(const [k,v] of Object.entries(p.legs||{})){legs+=`<tr><td>${k}</td><td>${v.strike} ${v.type}</td><td>${Number(v.reference_eod_premium).toFixed(2)}</td></tr>`}a.innerHTML=`<div class="card"><div class="big">${p.strategy}</div><p><b>Signal:</b> ${p.signal_date} &nbsp; <b>Planned entry:</b> ${p.planned_entry_date} &nbsp; <b>Expiry:</b> ${p.expiry}</p></div><div class="grid"><div class="card"><div>Reference NIFTY</div><div class="big">${Number(p.nifty_reference).toFixed(2)}</div></div><div class="card"><div>Credit</div><div class="big">${Number(p.reference_credit_points).toFixed(2)} pts</div></div><div class="card"><div>Lot / Lots</div><div class="big">${p.lot_size} / ${p.suggested_paper_lots}</div></div><div class="card"><div>Max expiry loss</div><div class="big">₹${Number(p.max_expiry_loss_total).toLocaleString('en-IN',{maximumFractionDigits:2})}</div></div></div><div class="card"><h2>Spread</h2><table class="legs"><thead><tr><th>Leg</th><th>Strike</th><th>Reference premium</th></tr></thead><tbody>${legs}</tbody></table><p><b>Breakevens:</b> ${Number(p.breakeven_lower).toFixed(2)} / ${Number(p.breakeven_upper).toFixed(2)}</p><p><b>TP debit:</b> ${Number(p.take_profit_debit).toFixed(2)} &nbsp; <b>SL debit:</b> ${Number(p.stop_loss_debit).toFixed(2)}</p><p><b>Target P&L:</b> ₹${Number(p.target_pnl_total_reference).toLocaleString('en-IN',{maximumFractionDigits:2})} &nbsp; <b>Stop P&L:</b> ₹${Number(p.stop_pnl_total_reference).toLocaleString('en-IN',{maximumFractionDigits:2})}</p></div><div class="card"><b>Important:</b> EOD premiums are reference values only. Paper-trade using actual observed bid/ask fills and record all timestamps and broker charges.</div>`}
-load().catch(e=>document.getElementById('app').innerHTML='<div class="card">Signal unavailable: '+e+'</div>');
-</script></body></html>
+const bust='?ts='+Date.now();
+async function get(path){const r=await fetch(path+bust,{cache:'no-store'});if(!r.ok)throw new Error(path+' HTTP '+r.status);return r.json();}
+function money(x){return Number(x).toLocaleString('en-IN',{maximumFractionDigits:2});}
+function num(x,d=2){return Number(x).toFixed(d);}
+async function load(){
+  const [signal,params]=await Promise.all([
+    get('signals/latest_trade_call.json'),
+    get('data/research/selected_parameters.json')
+  ]);
+  document.getElementById('status').innerHTML=`<div class="label">Current status</div><div class="big">${signal.status}</div><div class="muted">Latest data: ${signal.latest_data_date||'—'}</div>`;
+  const app=document.getElementById('app');
+  let html=`<div class="grid" style="margin-top:12px">
+    <div class="card"><div class="label">Selected distance</div><div class="big">${num(params.distance*100,2)}%</div></div>
+    <div class="card"><div class="label">Wing width</div><div class="big">${num(params.width,0)} pts</div></div>
+    <div class="card"><div class="label">Take profit</div><div class="big">${num(params.take_profit*100,0)}% credit</div></div>
+    <div class="card"><div class="label">Stop loss</div><div class="big">${num(params.stop_loss,2)}× credit</div></div>
+  </div>`;
+  html+=`<div class="card" style="margin-top:12px"><div class="label">Full-history training snapshot</div><p>Trades: <b>${money(params.trades)}</b> · In-sample win rate: <b>${num(params.win_rate*100,2)}%</b> · In-sample cumulative return: <b>${num(params.total_return*100,2)}%</b></p><p class="muted">These are training-period statistics, not out-of-sample performance.</p></div>`;
+  if(signal.status==='PENDING_ENTRY'){
+    let rows='';for(const [k,v] of Object.entries(signal.legs||{})){rows+=`<tr><td>${k}</td><td>${v.strike} ${v.type}</td><td>${num(v.reference_eod_premium)}</td></tr>`;}
+    html+=`<div class="card" style="margin-top:12px"><h2>Current trade call</h2><p><b>Signal:</b> ${signal.signal_date} · <b>Entry:</b> ${signal.planned_entry_date} · <b>Expiry:</b> ${signal.expiry}</p><div class="grid"><div><div class="label">NIFTY reference</div><div class="big">${num(signal.nifty_reference)}</div></div><div><div class="label">Net credit</div><div class="big">${num(signal.reference_credit_points)} pts</div></div><div><div class="label">Lot / lots</div><div class="big">${signal.lot_size} / ${signal.suggested_paper_lots}</div></div><div><div class="label">Max expiry loss</div><div class="big">₹${money(signal.max_expiry_loss_total)}</div></div></div><h3>Four-leg spread</h3><table class="legs"><thead><tr><th>Leg</th><th>Strike</th><th>Reference premium</th></tr></thead><tbody>${rows}</tbody></table><p><b>Breakevens:</b> ${num(signal.breakeven_lower)} / ${num(signal.breakeven_upper)}</p><p><b>Target debit:</b> ${num(signal.take_profit_debit)} · <b>Stop debit:</b> ${num(signal.stop_loss_debit)}</p><p><b>Target P&amp;L:</b> ₹${money(signal.target_pnl_total_reference)} · <b>Stop P&amp;L:</b> ₹${money(signal.stop_pnl_total_reference)}</p></div>`;
+  }else{
+    html+=`<div class="card" style="margin-top:12px"><div class="big">No new trade call</div><p>${signal.reason||'No current signal.'}</p><p class="muted">The current strategy generates signals on its configured entry day. The dashboard still shows the latest full-history model snapshot.</p></div>`;
+  }
+  html+=`<div class="card" style="margin-top:12px"><b>Paper-trading rule:</b> EOD option prices are reference values only. Record actual observed bid/ask entry, timestamp, quantity, charges, and exit details separately.</div>`;
+  app.innerHTML=html;
+}
+load().catch(e=>{document.getElementById('status').innerHTML='<div class="warn">Dashboard error</div><div>'+e.message+'</div>';});
+</script>
+</body></html>
