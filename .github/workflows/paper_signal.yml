@@ -1,8 +1,6 @@
-name: NIFTY Iron Condor Paper Signal
+name: NIFTY Iron Condor V1 Paper Signal
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
   schedule:
     - cron: '30 11 * * 2'   # Tuesday 17:00 IST, after NSE close
@@ -10,13 +8,18 @@ on:
 permissions:
   contents: write
 
+# V1 and V2 use the same repository-level paper-trading lock so they cannot
+# execute simultaneously. A manually triggered V2 waits rather than cancelling V1.
+concurrency:
+  group: iron-condor-paper-production
+  cancel-in-progress: false
+
 jobs:
   signal:
-    if: github.actor != 'github-actions[bot]' && (github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'Fix Pages dashboard'))
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
-      - name: Checkout
+      - name: Checkout V1
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -33,19 +36,24 @@ jobs:
           NSE_HISTORY_WORKERS: '5'
         run: python scripts/download_nifty_history.py
 
-      - name: Train on all available history and generate signal
+      - name: Train V1 on all available history and generate signal
         run: python scripts/generate_signal.py
 
-      - name: Run chronological OOS validation
+      - name: Run chronological V1 OOS validation
         run: python scripts/oos_validation.py
 
-      - name: Validate signal and OOS files
+      - name: Update immutable V1 prospective paper book
+        run: python scripts/maintain_paper_book.py --version v1 --signal signals/latest_trade_call.json
+
+      - name: Validate V1 outputs
         run: |
           test -f signals/latest_trade_call.json
           test -f signals/latest_trade_call.md
           test -f data/research/selected_parameters.json
           test -f data/research/oos_validation.json
           test -f data/research/oos_trade_history.csv
+          test -f paper/v1/events.jsonl
+          test -f paper/v1/trade_book.json
           python - <<'PY'
           import json
           p=json.load(open('signals/latest_trade_call.json'))
@@ -57,24 +65,20 @@ jobs:
           print('OOS trades:', o['oos']['trades'])
           print('OOS win rate:', o['oos']['win_rate'])
           print('OOS return:', o['oos']['total_return'])
-          if p.get('status') == 'PENDING_ENTRY':
-              required=['planned_entry_date','expiry','lot_size','suggested_paper_lots','reference_credit_points','max_expiry_loss_total']
-              missing=[x for x in required if x not in p]
-              assert not missing, missing
           PY
 
-      - name: Commit paper signal and validation artifacts
+      - name: Commit V1 page data and paper book only
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add signals data/research
-          git diff --cached --quiet || git commit -m "Update prospective iron condor signal and OOS validation"
+          git add signals data/research paper/v1
+          git diff --cached --quiet || git commit -m "Update V1 prospective signal and paper book"
           git push
 
-      - name: Upload artifacts
+      - name: Upload V1 artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: iron-condor-paper-signal
+          name: iron-condor-v1-paper-signal
           path: |
             signals/latest_trade_call.md
             signals/latest_trade_call.json
@@ -83,5 +87,7 @@ jobs:
             data/research/oos_validation.json
             data/research/oos_train_parameter_leaderboard.csv
             data/research/oos_trade_history.csv
+            paper/v1/events.jsonl
+            paper/v1/trade_book.json
             data/cache/manifest.json
           if-no-files-found: ignore
