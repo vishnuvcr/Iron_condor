@@ -1,0 +1,92 @@
+name: NIFTY Iron Condor V2 OOS Validation
+
+on:
+  push:
+    branches: [iron-condor-v2]
+    paths:
+      - 'scripts/oos_validation.py'
+      - 'scripts/generate_signal.py'
+      - 'scripts/download_nifty_history.py'
+      - 'src/**'
+      - 'requirements.txt'
+      - '.github/workflows/oos_validation_v2.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '15 12 * * 6'   # Saturday 17:45 IST
+
+permissions:
+  contents: write
+
+concurrency:
+  group: iron-condor-v2-oos
+  cancel-in-progress: false
+
+jobs:
+  validate-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Checkout V2 strategy branch
+        uses: actions/checkout@v4
+        with:
+          ref: iron-condor-v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download full NSE history
+        env:
+          NSE_HISTORY_START: '2015-01-01'
+          NSE_HISTORY_WORKERS: '5'
+        run: python scripts/download_nifty_history.py
+
+      - name: Run chronological 70/30 V2 OOS validation
+        run: python scripts/oos_validation.py
+
+      - name: Validate OOS artifacts
+        run: |
+          test -f data/research/oos_validation.json
+          test -f data/research/oos_trade_history.csv
+          test -f data/research/oos_trade_history_detailed.csv
+          test -f data/research/oos_trade_history_detailed.json
+          python - <<'PY'
+          import json
+          p='data/research/oos_validation.json'
+          x=json.load(open(p))
+          assert x.get('method') == 'Chronological 70/30 holdout'
+          assert isinstance(x.get('oos'), dict)
+          print(json.dumps(x, indent=2))
+          PY
+
+      - name: Publish OOS results to main for V2 page
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          rm -rf /tmp/publish
+          git clone --depth 1 --branch main "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" /tmp/publish
+          rm -rf /tmp/publish/v2/research
+          mkdir -p /tmp/publish/v2/research
+          cp data/research/oos_validation.json /tmp/publish/v2/research/oos_validation.json
+          cp data/research/oos_train_parameter_leaderboard.csv /tmp/publish/v2/research/oos_train_parameter_leaderboard.csv
+          cp data/research/oos_trade_history.csv /tmp/publish/v2/research/oos_trade_history.csv
+          cp data/research/oos_trade_history_detailed.csv /tmp/publish/v2/research/oos_trade_history_detailed.csv
+          cp data/research/oos_trade_history_detailed.json /tmp/publish/v2/research/oos_trade_history_detailed.json
+          cd /tmp/publish
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add v2/research
+          git diff --cached --quiet || git commit -m 'Publish V2 OOS validation results'
+          git push origin main
+
+      - name: Upload OOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: iron-condor-v2-oos-validation
+          path: data/research/
+          if-no-files-found: error
