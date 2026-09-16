@@ -1,0 +1,51 @@
+name: Iron Condor V2 Corrected OOS Audit
+
+on:
+  push:
+    paths:
+      - scripts/oos_validation_corrected_v2.py
+      - scripts/generate_signal_v2.py
+      - config.yaml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Download full NSE history
+        env:
+          NSE_HISTORY_START: '2015-01-01'
+          NSE_HISTORY_WORKERS: '5'
+        run: python scripts/download_nifty_history.py
+      - name: Run corrected V2 OOS validation
+        run: python scripts/oos_validation_corrected_v2.py
+      - name: Print corrected result
+        run: cat data/research/oos_validation_corrected_v2.json
+      - name: Commit research artifacts
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/research/oos_validation_corrected_v2.json data/research/oos_train_parameter_leaderboard_corrected_v2.csv data/research/oos_trade_history_corrected_v2.csv
+          git diff --cached --quiet || git commit -m 'Update corrected V2 OOS research'
+          git push origin iron-condor-v2
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: iron-condor-v2-corrected-oos
+          path: |
+            data/research/oos_validation_corrected_v2.json
+            data/research/oos_train_parameter_leaderboard_corrected_v2.csv
+            data/research/oos_trade_history_corrected_v2.csv
+            data/cache/manifest.json
+          if-no-files-found: error
