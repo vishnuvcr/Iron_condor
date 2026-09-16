@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-# Corrected V2 audit: positive P&L is entry credit minus exit condor debit.
+# Corrected V2 audit trigger: entry credit minus exit debit.
 import itertools, json, math
 from pathlib import Path
 import numpy as np, pandas as pd, yaml
