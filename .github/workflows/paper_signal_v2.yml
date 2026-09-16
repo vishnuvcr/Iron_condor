@@ -1,0 +1,119 @@
+name: NIFTY Iron Condor V2 Paper Signal
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 11 * * 1-5'   # Daily 17:00 IST; V2 confirms Thursday signals on next-session EOD
+
+permissions:
+  contents: write
+
+# Shared with V1 so the two production paper pipelines never run simultaneously.
+concurrency:
+  group: iron-condor-paper-production
+  cancel-in-progress: false
+
+jobs:
+  signal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout V2 strategy branch
+        uses: actions/checkout@v4
+        with:
+          ref: iron-condor-v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Preflight V2 modules
+        run: |
+          python -m py_compile scripts/generate_signal_v2.py scripts/maintain_paper_book.py
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, str(Path('.').resolve()))
+          import scripts.generate_signal_v2 as v2
+          import scripts.maintain_paper_book as pb
+          print('V2 imports OK')
+          PY
+
+      - name: Download current NSE history
+        env:
+          NSE_HISTORY_START: '2015-01-01'
+          NSE_HISTORY_WORKERS: '5'
+        run: python scripts/download_nifty_history.py
+
+      - name: Train V2 on all available history and generate Thursday signal state
+        run: python scripts/generate_signal_v2.py
+
+      - name: Reconcile immutable V2 prospective paper book
+        run: python scripts/maintain_paper_book.py --version v2 --signal v2/signal/latest_trade_call.json
+
+      - name: Validate V2 state
+        run: |
+          test -f v2/data/model_snapshot.json
+          test -f v2/signal/latest_trade_call.json
+          test -f paper/v2/events.jsonl
+          test -f paper/v2/trade_book.json
+          python - <<'PY'
+          import json
+          m=json.load(open('v2/data/model_snapshot.json'))
+          s=json.load(open('v2/signal/latest_trade_call.json'))
+          b=json.load(open('paper/v2/trade_book.json'))
+          assert m.get('status','OK') in {'OK','NOT_RUN'}
+          assert s.get('status') in {'PENDING_ENTRY','NO_SIGNAL','NOT_RUN'}
+          assert isinstance(b.get('trades'), list)
+          print('V2 signal:', s.get('status'))
+          print('Paper trades:', len(b['trades']))
+          if m.get('status','OK') == 'OK':
+              print('Training trades:', m.get('training_trades'))
+              print('Selected:', m.get('selected_parameters'))
+          PY
+
+      - name: Commit immutable V2 state back to strategy branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add v2/data v2/signal paper/v2
+          git diff --cached --quiet || git commit -m "Update V2 prospective signal and paper book"
+          git push origin iron-condor-v2
+
+      - name: Publish V2 page data to main only
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          rm -rf /tmp/publish
+          git clone --depth 1 --branch main "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" /tmp/publish
+          rm -rf /tmp/publish/v2/data /tmp/publish/v2/signal /tmp/publish/v2/research /tmp/publish/paper/v2
+          mkdir -p /tmp/publish/v2 /tmp/publish/paper
+          cp -R v2/data /tmp/publish/v2/data
+          cp -R v2/signal /tmp/publish/v2/signal
+          if [ -d v2/research ]; then cp -R v2/research /tmp/publish/v2/research; fi
+          cp -R paper/v2 /tmp/publish/paper/v2
+          cd /tmp/publish
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add v2/data v2/signal v2/research paper/v2 || true
+          git diff --cached --quiet || git commit -m "Publish V2 paper page state"
+          git push origin main
+
+      - name: Upload V2 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: iron-condor-v2-paper-signal
+          path: |
+            v2/data/model_snapshot.json
+            v2/data/training_top25.json
+            v2/signal/latest_trade_call.json
+            v2/signal/latest_trade_call.md
+            paper/v2/events.jsonl
+            paper/v2/trade_book.json
+            data/cache/manifest.json
+          if-no-files-found: ignore
