@@ -1,0 +1,74 @@
+name: NIFTY Iron Condor Paper Signal
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 11 * * 2'   # Tuesday 17:00 IST, after NSE close
+
+permissions:
+  contents: write
+
+jobs:
+  signal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download current NSE history
+        env:
+          NSE_HISTORY_START: '2015-01-01'
+          NSE_HISTORY_WORKERS: '5'
+        run: python scripts/download_nifty_history.py
+
+      - name: Train on all available history and generate signal
+        run: python scripts/generate_signal.py
+
+      - name: Validate signal files
+        run: |
+          test -f signals/latest_trade_call.json
+          test -f signals/latest_trade_call.md
+          test -f data/research/selected_parameters.json
+          python - <<'PY'
+          import json
+          p=json.load(open('signals/latest_trade_call.json'))
+          assert p.get('status') in {'PENDING_ENTRY','NO_SIGNAL'}
+          print('Signal status:', p.get('status'))
+          if p.get('status') == 'PENDING_ENTRY':
+              required=['planned_entry_date','expiry','lot_size','suggested_paper_lots','reference_credit_points','max_expiry_loss_total']
+              missing=[x for x in required if x not in p]
+              assert not missing, missing
+              print('Planned entry:', p['planned_entry_date'])
+              print('Expiry:', p['expiry'])
+              print('Lots:', p['suggested_paper_lots'])
+          PY
+
+      - name: Commit paper signal artifacts
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add signals data/research
+          git diff --cached --quiet || git commit -m "Update prospective iron condor paper signal"
+          git push
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: iron-condor-paper-signal
+          path: |
+            signals/latest_trade_call.md
+            signals/latest_trade_call.json
+            signals/open_trade.json
+            data/research/selected_parameters.json
+            data/research/parameter_leaderboard.csv
+            data/cache/manifest.json
+          if-no-files-found: ignore
