@@ -1,0 +1,16 @@
+capital: 100000
+underlying: NIFTY
+entry_weekday: 1              # Python weekday: Mon=0, Tue=1, ...
+min_days_to_expiry: 1
+max_days_to_expiry: 7
+short_distance_pct: [0.0125, 0.015, 0.0175, 0.02, 0.0225, 0.025, 0.0275, 0.03]
+wing_width_points: [100, 150, 200, 250]
+take_profit_credit_pct: [0.40, 0.50, 0.60, 0.70]
+stop_loss_credit_multiple: [1.0, 1.25, 1.50, 2.0]
+max_trades_per_week: 1
+
+# Prospective paper-trading controls
+max_paper_lots: 1
+slippage_per_leg: 0.50
+minimum_credit_points: 0.0
+signal_after_close_only: true
