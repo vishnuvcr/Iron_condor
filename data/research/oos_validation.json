@@ -42,5 +42,7 @@
     "stop_loss_trades": 0,
     "expiry_trades": 0
   },
-  "oos_trades_file": "data/research/oos_trade_history.csv"
+  "oos_trades_file": "data/research/oos_trade_history.csv",
+  "oos_detailed_trades_file": "data/research/oos_trade_history_detailed.csv",
+  "oos_detailed_trades_json": "data/research/oos_trade_history_detailed.json"
 }
