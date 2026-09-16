@@ -1,0 +1,13 @@
+capital: 100000
+underlying: NIFTY
+entry_weekdays: [3]           # Thursday signal session; Python weekday Mon=0
+min_days_to_expiry: 1
+max_days_to_expiry: 7
+short_distance_pct: [0.0125, 0.015, 0.0175, 0.02]
+wing_width_points: [100, 150, 200, 250]
+take_profit_credit_pct: [0.40, 0.50, 0.60, 0.70]
+stop_loss_credit_multiple: [1.0, 1.25, 1.50, 2.0]
+minimum_credit_points: [3.0, 5.0, 7.0, 10.0]
+selection_slippage_per_leg: 0.50
+max_paper_lots: 1
+signal_after_close_only: true
