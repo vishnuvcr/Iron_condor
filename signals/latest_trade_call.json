@@ -1,0 +1,5 @@
+{
+  "status": "NO_SIGNAL",
+  "reason": "Latest completed session is not an entry signal session and the next signal session is not in the current dataset.",
+  "latest_data_date": "2026-09-16"
+}
