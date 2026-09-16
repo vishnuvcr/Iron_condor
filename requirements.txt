@@ -1,0 +1,5 @@
+numpy>=1.26
+pandas>=2.2
+pyarrow>=16
+PyYAML>=6.0
+requests>=2.32
