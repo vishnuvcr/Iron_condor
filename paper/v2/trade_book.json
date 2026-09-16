@@ -1,1 +1,7 @@
-{"version":"v2","generated_at":null,"prospective_only":true,"oos_trades_excluded":true,"trades":[]}
+{
+  "version": "v2",
+  "generated_utc": "2026-09-16T18:14:43.795099+00:00",
+  "prospective_only": true,
+  "oos_trades_excluded": true,
+  "trades": []
+}

@@ -1,1 +1,5 @@
-{"status":"NOT_RUN","reason":"V2 has not yet generated a prospective signal."}
+{
+  "status": "NO_SIGNAL",
+  "latest_data_date": "2026-09-16",
+  "reason": "No Thursday signal session in current dataset."
+}
