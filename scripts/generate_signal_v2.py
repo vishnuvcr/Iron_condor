@@ -85,15 +85,24 @@ def run_config(m,p,start,end,slip=None):
         for day in [d for d in m.dates if entry_date<d<=exp and d<=end]:
             vals=[m.price(day,exp,k,t) for k,t in lk]
             if any(v is None for v in vals): continue
-            mark=vals[1]+vals[2]-vals[0]-vals[3]; debit=-mark+4*slip
-            if debit <= (1-float(p['take_profit']))*eff: exit_date,reason,exit_mark,exit_px=day,'take_profit',mark,vals; break
-            if debit >= (1+float(p['stop_loss']))*eff: exit_date,reason,exit_mark,exit_px=day,'stop_loss',mark,vals; break
+            # mark is the current debit/liability to close the short condor:
+            # short put + short call - long put - long call.
+            mark=vals[1]+vals[2]-vals[0]-vals[3]
+            # Exit slippage adds to the debit. Net trade P&L points before broker fees:
+            # effective entry credit - exit debit.
+            debit=mark+4*slip
+            if debit <= (1-float(p['take_profit']))*eff:
+                exit_date,reason,exit_mark,exit_px=day,'take_profit',mark,vals; break
+            if debit >= (1+float(p['stop_loss']))*eff:
+                exit_date,reason,exit_mark,exit_px=day,'stop_loss',mark,vals; break
         if exit_date is None:
             if exp>end: continue
             vals=[m.price(exp,exp,k,t) for k,t in lk]
             if any(v is None for v in vals): continue
             exit_date,reason,exit_mark,exit_px=exp,'expiry',vals[1]+vals[2]-vals[0]-vals[3],vals
-        lot=lot_size(exp); gross=(eff+exit_mark-4*slip)*lot; charge=cost_model(en,exit_px,lot); net=gross-charge
+        lot=lot_size(exp)
+        gross=(eff-exit_mark-4*slip)*lot
+        charge=cost_model(en,exit_px,lot); net=gross-charge
         rows.append({'entry_date':entry_date,'exit_date':exit_date,'net_pnl':net,'reason':reason})
         active_until=pd.Timestamp(exit_date)
     return pd.DataFrame(rows)
@@ -121,9 +130,7 @@ def select(m):
 
 def signal_from_selected(m,selected):
     latest=max(m.dates); expected_day=int(CFG['entry_weekdays'][0])
-    # Never manufacture a future signal. Preserve the previous file on non-signal sessions.
-    if latest.weekday()!=expected_day:
-        return None
+    if latest.weekday()!=expected_day: return None
     p=selected; exp=m.expiry_for(latest)
     if exp is None: return None
     legs=m.choose(latest,exp,float(p['distance']),int(p['width']))
@@ -155,14 +162,13 @@ def main():
     model={'strategy':'Iron Condor V2','training_start':str(m.dates[0].date()),'training_end':str(m.dates[-1].date()),'selected_parameters':p,'selection_score':float(score_),'training_trades':int(len(train)),'training_win_rate':float((train.net_pnl>0).mean()),'training_net_pnl':float(train.net_pnl.sum()),'training_return':float(train.net_pnl.sum()/CAPITAL)}
     Path('v2/data/model_snapshot.json').write_text(json.dumps(model,indent=2,default=str)); pd.DataFrame(top,columns=['score','params','trades']).to_json('v2/data/training_top25.json',orient='records',date_format='iso')
     call=signal_from_selected(m,p)
-    # Preserve the latest prospective call on non-signal days. Do not overwrite with NO_SIGNAL.
     sp=Path('v2/signal/latest_trade_call.json')
     if call is not None: sp.write_text(json.dumps(call,indent=2,default=str))
     elif not sp.exists(): sp.write_text(json.dumps({'status':'NO_SIGNAL','latest_data_date':str(max(m.dates).date()),'reason':'No Thursday signal session in current dataset.'},indent=2))
     if call is not None:
         md=[f"# Iron Condor V2 — {call['signal_id']}","",f"Signal session: {call['signal_date']}",f"Planned entry observation: {call['planned_entry_date']}",f"Expiry: {call['expiry']}",f"NIFTY reference: {call['nifty_reference']:.2f}",f"Minimum-credit condition: {call['entry_condition']}","","## Four-leg spread"]
         for n,v in call['legs'].items(): md.append(f"- {n}: **{v['strike']:.0f} {v['type']}**, EOD reference premium {v['reference_eod_premium']:.2f}")
-        md += [f"- Reference credit: **{call['reference_credit_points']:.2f} points**",f"- Breakevens: **{call['breakeven_lower']:.2f} / {call['breakeven_upper']:.2f}**",f"- Lot size: **{call['lot_size']}**",f"- Suggested paper lots: **{call['suggested_paper_lots']}**",f"- Maximum expiry loss: **₹{call['max_expiry_loss_total']:,.2f}**"]
+        md += [f"- Reference credit: **{call['reference_credit_points']:.2f} points**",f"- Breakevens: **{call['breakeven_lower']:.2f} / {call['breakeven_upper']:.2f}**",f"- Lot size: **{call['lot_size']}**",f"- Suggested paper lots: **{call['suggested_paper_lots']}**",f"- Maximum expiry loss: **₹{call['max_expiry_loss_total']:,.2f}"]
         Path('v2/signal/latest_trade_call.md').write_text('\n'.join(md)+'\n')
     pd.DataFrame([model]).to_json('v2/data/model_snapshot_table.json',orient='records',date_format='iso')
 
