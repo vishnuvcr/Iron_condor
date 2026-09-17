@@ -1,7 +1,68 @@
 {
   "version": "v2",
-  "generated_utc": "2026-09-16T18:14:43.795099+00:00",
+  "generated_utc": "2026-09-17T15:47:21.123832+00:00",
   "prospective_only": true,
   "oos_trades_excluded": true,
-  "trades": []
+  "trades": [
+    {
+      "signal_id": "IC-V2-20260917-20260922-22950-23700",
+      "version": "v2",
+      "call_snapshot": {
+        "status": "PENDING_ENTRY",
+        "signal_id": "IC-V2-20260917-20260922-22950-23700",
+        "strategy": "Iron Condor V2",
+        "generated_utc": "2026-09-17T15:47:19.149383+00:00",
+        "signal_date": "2026-09-17",
+        "planned_entry_date": null,
+        "expiry": "2026-09-22",
+        "dte_at_signal": 5,
+        "nifty_reference": 23333.4,
+        "entry_rule": "Thursday close signal; observe next-session EOD reference entry and accept only if effective credit meets the trained minimum-credit filter.",
+        "entry_condition": "Next-session EOD effective credit >= 10.00 points after 0.50-point/leg modeled slippage.",
+        "distance_pct": 0.015,
+        "wing_width_points": 100,
+        "take_profit_credit_pct": 0.6,
+        "stop_loss_credit_multiple": 1.5,
+        "minimum_credit_points": 10.0,
+        "configured_slippage_per_leg": 0.5,
+        "legs": {
+          "put_long": {
+            "strike": 22850.0,
+            "type": "PE",
+            "reference_eod_premium": 15.35
+          },
+          "put_short": {
+            "strike": 22950.0,
+            "type": "PE",
+            "reference_eod_premium": 23.8
+          },
+          "call_short": {
+            "strike": 23700.0,
+            "type": "CE",
+            "reference_eod_premium": 9.3
+          },
+          "call_long": {
+            "strike": 23800.0,
+            "type": "CE",
+            "reference_eod_premium": 5.0
+          }
+        },
+        "reference_credit_points": 12.75,
+        "effective_credit_if_same_reference": 10.75,
+        "breakeven_lower": 22937.25,
+        "breakeven_upper": 23712.75,
+        "lot_size": 65,
+        "suggested_paper_lots": 1,
+        "max_expiry_loss_points": 87.25,
+        "max_expiry_loss_total": 5671.25,
+        "take_profit_debit": 4.3,
+        "stop_loss_debit": 26.875,
+        "capital": 100000.0,
+        "execution_note": "Reference prices are EOD observations. This call is a paper-research instruction, not a guaranteed executable fill."
+      },
+      "entry_observation": null,
+      "outcome": null,
+      "paper_status": "PENDING_ENTRY"
+    }
+  ]
 }
