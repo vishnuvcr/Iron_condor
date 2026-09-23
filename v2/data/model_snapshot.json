@@ -1,7 +1,7 @@
 {
   "strategy": "Iron Condor V2",
   "training_start": "2015-01-01",
-  "training_end": "2026-09-22",
+  "training_end": "2026-09-23",
   "selected_parameters": {
     "entry_weekday": 3,
     "distance": 0.015,
