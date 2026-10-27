@@ -1,7 +1,7 @@
 {
   "strategy": "Iron Condor V2",
   "training_start": "2015-01-01",
-  "training_end": "2026-10-26",
+  "training_end": "2026-10-27",
   "selected_parameters": {
     "entry_weekday": 3,
     "distance": 0.015,
@@ -10,9 +10,9 @@
     "stop_loss": 1.5,
     "minimum_credit": 10.0
   },
-  "selection_score": -0.04524271268532906,
-  "training_trades": 250,
-  "training_win_rate": 0.676,
-  "training_net_pnl": -30825.12325030504,
-  "training_return": -0.3082512325030504
+  "selection_score": -0.044708324230910534,
+  "training_trades": 251,
+  "training_win_rate": 0.6772908366533864,
+  "training_net_pnl": -29559.573281200042,
+  "training_return": -0.2955957328120004
 }
