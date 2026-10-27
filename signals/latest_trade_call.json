@@ -1,5 +1,59 @@
 {
-  "status": "NO_SIGNAL",
-  "reason": "Latest completed session is not an entry signal session and the next signal session is not in the current dataset.",
-  "latest_data_date": "2026-10-19"
+  "status": "PENDING_ENTRY",
+  "signal_id": "IC-20261027-20261103-22450-23100",
+  "generated_utc": "2026-10-27T17:00:47.829210+00:00",
+  "signal_date": "2026-10-27",
+  "planned_entry_date": null,
+  "expiry": "2026-11-03",
+  "dte_at_signal": 7,
+  "nifty_reference": 22776.7,
+  "strategy": "Success V1 delayed-entry NIFTY weekly iron condor",
+  "entry_rule": "Signal after Tuesday close; paper entry on next eligible NSE session",
+  "distance_pct": 0.0125,
+  "wing_width_points": 250,
+  "take_profit_credit_pct": 0.4,
+  "stop_loss_credit_multiple": 1.0,
+  "legs": {
+    "put_long": {
+      "strike": 22200.0,
+      "type": "PE",
+      "reference_eod_premium": 37.9
+    },
+    "put_short": {
+      "strike": 22450.0,
+      "type": "PE",
+      "reference_eod_premium": 81.0
+    },
+    "call_short": {
+      "strike": 23100.0,
+      "type": "CE",
+      "reference_eod_premium": 64.25
+    },
+    "call_long": {
+      "strike": 23350.0,
+      "type": "CE",
+      "reference_eod_premium": 22.55
+    }
+  },
+  "reference_credit_points": 84.8,
+  "reference_credit_value_per_lot": 5512.0,
+  "effective_credit_after_configured_slippage": 82.8,
+  "breakeven_lower": 22365.2,
+  "breakeven_upper": 23184.8,
+  "lot_size": 65,
+  "suggested_paper_lots": 1,
+  "premium_cash_per_lot": 5512.0,
+  "premium_cash_total": 5512.0,
+  "max_expiry_loss_points": 165.2,
+  "max_expiry_loss_per_lot": 10738.0,
+  "max_expiry_loss_total": 10738.0,
+  "take_profit_debit": 50.879999999999995,
+  "stop_loss_debit": 169.6,
+  "target_pnl_total_reference": 2085.55279762,
+  "stop_pnl_total_reference": -5631.24720238,
+  "modeled_round_trip_cost_reference": 119.24720238000002,
+  "configured_slippage_per_leg": 0.5,
+  "capital": 100000.0,
+  "capital_remaining_after_max_loss_reference": 89262.0,
+  "execution_note": "EOD premiums are reference values, not guaranteed fills. Record actual fills, timestamp, and broker contract-note costs in the paper ledger."
 }
