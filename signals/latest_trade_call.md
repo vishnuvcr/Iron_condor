@@ -1,29 +1,29 @@
 # NIFTY Iron Condor — PENDING_ENTRY
 
-Generated: 2026-10-27T17:00:47.829210+00:00
+Generated: 2026-11-03T18:45:17.308619+00:00
 
-**Signal ID:** `IC-20261027-20261103-22450-23100`
-**Signal session:** 2026-10-27
+**Signal ID:** `IC-20261103-20261109-23450-24100`
+**Signal session:** 2026-11-03
 **Planned paper entry:** None
-**Expiry:** 2026-11-03 (7 DTE)
-**NIFTY reference:** 22776.70
+**Expiry:** 2026-11-09 (6 DTE)
+**NIFTY reference:** 23780.50
 
 ## Spread
-- put_long: **22200 PE**, reference premium 37.90
-- put_short: **22450 PE**, reference premium 81.00
-- call_short: **23100 CE**, reference premium 64.25
-- call_long: **23350 CE**, reference premium 22.55
-- Credit: **84.80 points**
-- Breakevens: **22365.20 / 23184.80**
+- put_long: **23200 PE**, reference premium 44.50
+- put_short: **23450 PE**, reference premium 88.60
+- call_short: **24100 CE**, reference premium 57.70
+- call_long: **24350 CE**, reference premium 25.25
+- Credit: **76.55 points**
+- Breakevens: **23373.45 / 24176.55**
 - Lot size: **65**
 - Suggested paper lots: **1**
-- Premium received (reference): **₹5,512.00**
-- Maximum expiry loss (reference): **₹10,738.00**
-- Target debit: **50.88**
-- Stop debit: **169.60**
-- Target P&L (reference): **₹2,085.55**
-- Stop P&L (reference): **₹-5,631.25**
-- Modeled costs: **₹119.25**
+- Premium received (reference): **₹4,975.75**
+- Maximum expiry loss (reference): **₹11,274.25**
+- Target debit: **45.93**
+- Stop debit: **153.10**
+- Target P&L (reference): **₹1,869.80**
+- Stop P&L (reference): **₹-5,096.25**
+- Modeled costs: **₹120.50**
 
 ## Execution
 Configured slippage stress: **₹0.50/leg**

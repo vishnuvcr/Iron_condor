@@ -1,6 +1,6 @@
 {
   "version": "v1",
-  "generated_utc": "2026-10-27T17:02:15.008435+00:00",
+  "generated_utc": "2026-11-03T18:47:45.498730+00:00",
   "prospective_only": true,
   "oos_trades_excluded": true,
   "trades": [
@@ -328,6 +328,72 @@
         "configured_slippage_per_leg": 0.5,
         "capital": 100000.0,
         "capital_remaining_after_max_loss_reference": 89262.0,
+        "execution_note": "EOD premiums are reference values, not guaranteed fills. Record actual fills, timestamp, and broker contract-note costs in the paper ledger."
+      },
+      "entry_observation": null,
+      "outcome": null,
+      "paper_status": "PENDING_ENTRY"
+    },
+    {
+      "signal_id": "IC-20261103-20261109-23450-24100",
+      "version": "v1",
+      "call_snapshot": {
+        "status": "PENDING_ENTRY",
+        "signal_id": "IC-20261103-20261109-23450-24100",
+        "generated_utc": "2026-11-03T18:45:17.308619+00:00",
+        "signal_date": "2026-11-03",
+        "planned_entry_date": null,
+        "expiry": "2026-11-09",
+        "dte_at_signal": 6,
+        "nifty_reference": 23780.5,
+        "strategy": "Success V1 delayed-entry NIFTY weekly iron condor",
+        "entry_rule": "Signal after Tuesday close; paper entry on next eligible NSE session",
+        "distance_pct": 0.0125,
+        "wing_width_points": 250,
+        "take_profit_credit_pct": 0.4,
+        "stop_loss_credit_multiple": 1.0,
+        "legs": {
+          "put_long": {
+            "strike": 23200.0,
+            "type": "PE",
+            "reference_eod_premium": 44.5
+          },
+          "put_short": {
+            "strike": 23450.0,
+            "type": "PE",
+            "reference_eod_premium": 88.6
+          },
+          "call_short": {
+            "strike": 24100.0,
+            "type": "CE",
+            "reference_eod_premium": 57.7
+          },
+          "call_long": {
+            "strike": 24350.0,
+            "type": "CE",
+            "reference_eod_premium": 25.25
+          }
+        },
+        "reference_credit_points": 76.55000000000001,
+        "reference_credit_value_per_lot": 4975.750000000001,
+        "effective_credit_after_configured_slippage": 74.55000000000001,
+        "breakeven_lower": 23373.45,
+        "breakeven_upper": 24176.55,
+        "lot_size": 65,
+        "suggested_paper_lots": 1,
+        "premium_cash_per_lot": 4975.750000000001,
+        "premium_cash_total": 4975.750000000001,
+        "max_expiry_loss_points": 173.45,
+        "max_expiry_loss_per_lot": 11274.25,
+        "max_expiry_loss_total": 11274.25,
+        "take_profit_debit": 45.93000000000001,
+        "stop_loss_debit": 153.10000000000002,
+        "target_pnl_total_reference": 1869.80258593,
+        "stop_pnl_total_reference": -5096.247414070001,
+        "modeled_round_trip_cost_reference": 120.49741406999999,
+        "configured_slippage_per_leg": 0.5,
+        "capital": 100000.0,
+        "capital_remaining_after_max_loss_reference": 88725.75,
         "execution_note": "EOD premiums are reference values, not guaranteed fills. Record actual fills, timestamp, and broker contract-note costs in the paper ledger."
       },
       "entry_observation": null,
