@@ -1,18 +1,18 @@
-# Iron Condor V2 — IC-V2-20261105-20261109-24200-25000
+# Iron Condor V2 — IC-V2-20261112-20261117-24900-25700
 
-Signal session: 2026-11-05
+Signal session: 2026-11-12
 Planned entry observation: None
-Expiry: 2026-11-09
-NIFTY reference: 24588.00
+Expiry: 2026-11-17
+NIFTY reference: 25308.70
 Minimum-credit condition: Next-session EOD effective credit >= 10.00 points after 0.50-point/leg modeled slippage.
 
 ## Four-leg spread
-- put_long: **24100 PE**, EOD reference premium 30.90
-- put_short: **24200 PE**, EOD reference premium 43.80
-- call_short: **25000 CE**, EOD reference premium 35.90
-- call_long: **25100 CE**, EOD reference premium 25.40
-- Reference credit: **23.40 points**
-- Breakevens: **24176.60 / 25023.40**
+- put_long: **24800 PE**, EOD reference premium 29.70
+- put_short: **24900 PE**, EOD reference premium 45.60
+- call_short: **25700 CE**, EOD reference premium 53.80
+- call_long: **25800 CE**, EOD reference premium 39.10
+- Reference credit: **30.60 points**
+- Breakevens: **24869.40 / 25730.60**
 - Lot size: **65**
 - Suggested paper lots: **1**
-- Maximum expiry loss: **₹4,979.00
+- Maximum expiry loss: **₹4,511.00
